@@ -3,40 +3,6 @@
 -- run using `osascript ./{file_name}`
 -- Don't try to use the automatically detected script run thing or it'll ask for 
 --  elevated permissions, which this script doesn't need
--- Resource on cron jobs: https://www.hostinger.com/tutorials/cron-job 
-
-(*
-  The zero_pad function and date/time function taken from:
-  https://gist.github.com/Glutexo/78c170e2e314f0eacc1a
-*)
-on zero_pad(value, string_length)
-  set string_zeroes to ""
-  set digits_to_pad to string_length - (length of (value as string))
-  if digits_to_pad > 0 then
-    repeat digits_to_pad times
-      set string_zeroes to string_zeroes & "0" as string
-    end repeat
-  end if
-  set padded_value to string_zeroes & value as string
-  return padded_value
-end zero_pad
-
-on getDateAndTime()
-  set now to (current date)
- 
-  set result to (year of now as integer) as string
-  set result to result & "-"
-  set result to result & zero_pad(month of now as integer, 2)
-  set result to result & "-"
-  set result to result & zero_pad(day of now as integer, 2)
-  set result to result & " "
-  set result to result & zero_pad(hours of now as integer, 2)
-  set result to result & ":"
-  set result to result & zero_pad(minutes of now as integer, 2)
-  set result to result & ":"
-  set result to result & zero_pad(seconds of now as integer, 2)
-  return result
-end getDateAndTime
 
 (*
   restartApplication: a function to restart an application.
@@ -73,13 +39,13 @@ end restartApplication
 --  Make sure Spotify is running, and restart if the current track is an advertisement
 if application "Spotify" is not running then
   restartApplication("Spotify")
-  tell application "Spotify"
-    play
-  end tell
 end if
 
 -- figure out if we're in an advertisement
 tell application "Spotify"
+  if player state is paused then
+    play
+  end if
   if player state is playing or player state is paused then
     set track_name to name of current track
     set artist_name to artist of current track
@@ -88,33 +54,18 @@ tell application "Spotify"
   end if
 end tell
 
--- restart if an ad is detected
-repeat
+if track_name = "Advertisement" and artist_name = "" then
+  log "Advertisement seen; restarting"
+  restartApplication("Spotify")
   tell application "Spotify"
+    play
     set track_name to name of current track
     set artist_name to artist of current track
     set track_duration to duration of current track
     set player_position to player position
   end tell
+end if
+-- program sleep until song is done
+set sleep_duration to (track_duration/1000 - player_position) + 0.1
 
-  if track_name = "Advertisement" and artist_name = "" then
-    log "Advertisement seen; restarting"
-    restartApplication("Spotify")
-    tell application "Spotify"
-      play
-      set track_name to name of current track
-      set artist_name to artist of current track
-      set track_duration to duration of current track
-      set player_position to player position
-    end tell
-  end if
-  -- program sleep until song is done
-  set sleep_duration to track_duration/1000 - player_position + 0.1
-  set output to "sleeping " & sleep_duration & " " & track_name & " " & artist_name & " " & track_duration/1000 & " " & player_position
-  log output
-  delay sleep_duration
-end repeat
-
--- crontab -l | { cat; echo "0 0 0 0 0 some entry"; } | crontab -
-
--- return track_duration & player_position * 1000 & artist_name & getDateAndTime()
+return sleep_duration
