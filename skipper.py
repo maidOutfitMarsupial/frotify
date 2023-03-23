@@ -1,5 +1,6 @@
+#!/usr/bin/python
+
 import subprocess, time
-import time
 import threading
 
 # use threading.Timer for SpotifyReloader
@@ -11,7 +12,7 @@ import threading
 class SpotifyReloader(threading.Thread):
     def run(self):
         while True:
-            result = subprocess.check_output(["osascript", "./script.osascript"])
+            result = subprocess.check_output(["osascript", "./reloadSpotify.osascript"])
             result = str(result.decode("utf-8")).strip()
             time.sleep(float(result))
 
