@@ -3,10 +3,11 @@
 import subprocess, time
 import threading
 
-# use threading.Timer for SpotifyReloader
-#  and stop writing in the sleep yourself.
+# can't switch to threading.Timer due to the inability to get returns.
+# I could use a global instead, but that'd be a difficult path to voluntarily
+# decide to walk down. I need to learn more about other forms of concurrency like
+# multiprocessing.
 # otherwise, InputThread should gain the functionality of skipping
-#  (and subsequently cancelling and recreating a SpotifyReloader thread)
 #  pausing, playing, and printing song details.
 
 class SpotifyReloader(threading.Thread):
